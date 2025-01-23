@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import gsap from 'gsap';
 import {
   TextField,
   Radio,
@@ -14,14 +13,10 @@ import {
   Select,
   MenuItem,
   Grid,
-  Typography,
-  Box,
   Snackbar,
   Alert,
-  IconButton,
-  Switch,
 } from '@mui/material';
-import { LightMode, DarkMode, KeyboardArrowDown } from '@mui/icons-material';
+import { DarkMode, KeyboardArrowDown } from '@mui/icons-material';
 
 const GlobalStyle = createGlobalStyle`
   .MuiSelect-icon {
@@ -74,6 +69,7 @@ const ThemeToggleWrapper = styled.div`
     cursor: pointer;
   }
 `;
+
 const StyledForm = styled(motion.div)`
   background: ${props => props.theme.cardBg};
   border-radius: 24px;
@@ -184,18 +180,7 @@ const StyledFormControl = styled(FormControl)`
     }
   }
 `;
-const StyledTypography = styled(Typography)`
-  && {
-    color: ${props => props.theme.text};
-    text-align: center;
-    margin-bottom: 32px;
-    margin-top: 24px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 2rem;
-    user-select: none;
-  }
-`;
+
 const StyledMenuItem = styled(MenuItem)`
   && {
     color: ${props => props.theme.text};
@@ -243,7 +228,6 @@ const AnimatedButton = styled(motion.button)`
   }
 `;
 
-
 const FormSection = styled(motion.div)`
   margin: 1.5rem 0;
 `;
@@ -266,13 +250,13 @@ const validationSchema = Yup.object({
     is: 'true',
     then: () => Yup.string().required('Please select lens type')
   }),
-  rightEyePower: Yup.number().when('hasPreviousLenses', {
+  rightEyeS: Yup.number().when('hasPreviousLenses', {
     is: 'false',
-    then: () => Yup.number().required('Right eye power is required')
+    then: () => Yup.number().required('Right eye S value is required')
   }),
-  leftEyePower: Yup.number().when('hasPreviousLenses', {
+  leftEyeS: Yup.number().when('hasPreviousLenses', {
     is: 'false',
-    then: () => Yup.number().required('Left eye power is required')
+    then: () => Yup.number().required('Left eye S value is required')
   }),
   wantMultifocal: Yup.string().required('Please select multifocal preference')
 });
@@ -303,7 +287,7 @@ const sectionVariants = {
   }
 };
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoy89rPsfO0LdC0hkd9icw2UKi2dmsLwCv6VBMqgNJDpH4NtPM3pq4T6oAxXr48uYQpA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfQX2BWU8FX5wUsVoMqlG8W6ZOat6FxaXNLkMePkZqR1ZA8H9a21ax0pbyANKvNzzJwA/exec';
 
 const ContactLensForm = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -319,19 +303,16 @@ const ContactLensForm = () => {
     toric: '',
     wearingSchedule: '',
     lensType: '',
-    rightEyePower: '',
-    leftEyePower: '',
+    rightEyeS: '',
+    rightEyeC: '',
+    rightEyeA: '',
+    rightEyeAdd: '',
+    leftEyeS: '',
+    leftEyeC: '',
+    leftEyeA: '',
+    leftEyeAdd: '',
     wantMultifocal: '',
   };
-
-  useEffect(() => {
-    gsap.from('.form-title', {
-      y: -50,
-      opacity: 0,
-      duration: 1,
-      ease: 'power3.out'
-    });
-  }, []);
 
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     setIsSubmitting(true);
@@ -345,8 +326,14 @@ const ContactLensForm = () => {
         toric: values.toric,
         wearingSchedule: values.wearingSchedule,
         lensType: values.lensType,
-        rightEyePower: values.rightEyePower,
-        leftEyePower: values.leftEyePower,
+        rightEyeS: values.rightEyeS,
+        rightEyeC: values.rightEyeC,
+        rightEyeA: values.rightEyeA,
+        rightEyeAdd: values.rightEyeAdd,
+        leftEyeS: values.leftEyeS,
+        leftEyeC: values.leftEyeC,
+        leftEyeA: values.leftEyeA,
+        leftEyeAdd: values.leftEyeAdd,
         wantMultifocal: values.wantMultifocal
       };
   
@@ -364,24 +351,7 @@ const ContactLensForm = () => {
         severity: 'success',
         message: 'Form submitted successfully!'
       });
-      resetForm({
-        values: {
-          name: '',
-          mobile: '',
-          age: '',
-          gender: '',
-          hasPreviousLenses: '',
-          toric: '',
-          wearingSchedule: '',
-          lensType: '',
-          rightEyePower: '',
-          leftEyePower: '',
-          wantMultifocal: ''
-        }
-      });
-      resetForm({
-        values: initialValues
-      });
+      resetForm();
     } catch (error) {
       console.error('Form submission error:', error);
       setSubmitStatus({
@@ -394,6 +364,7 @@ const ContactLensForm = () => {
       setSubmitting(false);
     }
   };
+
   const handleCloseSnackbar = () => {
     setSubmitStatus({ ...submitStatus, open: false });
   };
@@ -419,16 +390,14 @@ const ContactLensForm = () => {
         animate="visible"
         variants={formVariants}
       >
-       <ThemeToggleWrapper onClick={() => setIsDarkMode(!isDarkMode)}>
-
-  <DarkMode />
-</ThemeToggleWrapper>
-<div style={{textAlign: 'center',marginBottom: '20px'}}>
-
-<h1 variant="h4" style={{marginBottom: '20px', color: '#44d09f', fontWeight: 'bold'}} className="form-title">
-  Vision Care Contact Lens Form
-</h1>
-</div>
+        <ThemeToggleWrapper onClick={() => setIsDarkMode(!isDarkMode)}>
+          <DarkMode />
+        </ThemeToggleWrapper>
+        <div style={{textAlign: 'center', marginBottom: '20px'}}>
+          <h1 style={{marginBottom: '20px', color: '#44d09f', fontWeight: 'bold'}} className="form-title">
+            Vision Care Contact Lens Form
+          </h1>
+        </div>
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -450,8 +419,8 @@ const ContactLensForm = () => {
                         name="name"
                         as={TextField}
                         label="Name"
-                        fullWidth
                         value={values.name}
+                        fullWidth
                         error={touched.name && errors.name}
                         helperText={touched.name && errors.name}
                         onChange={handleChange}
@@ -459,34 +428,33 @@ const ContactLensForm = () => {
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
-                    <StyledField 
-  name="mobile"
-  type="number"
-  as={TextField}
-  label="Mobile"
-  value={values.mobile}
-  fullWidth
-  error={touched.mobile && errors.mobile}
-  helperText={touched.mobile && errors.mobile}
-  onChange={handleChange}  
-  onBlur={handleBlur}
-  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
-/>
+                      <StyledField 
+                        name="mobile"
+                        type="tel"
+                        as={TextField}
+                        label="Mobile"
+                        value={values.mobile}
+                        fullWidth
+                        error={touched.mobile && errors.mobile}
+                        helperText={touched.mobile && errors.mobile}
+                        onChange={handleChange}  
+                        onBlur={handleBlur}
+                        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      />
                     </Grid>
                     <Grid item xs={12} md={6}>
-                    <StyledField
-  name="age"
-  as={TextField}
-  label="Age"
-  type="number"
-  fullWidth
-  value={values.age}
-  error={touched.age && errors.age}
-  helperText={touched.age && errors.age}
-  onChange={handleChange}
-  onBlur={handleBlur}
-  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
-/>
+                      <StyledField
+                        name="age"
+                        as={TextField}
+                        label="Age"
+                        type="number"
+                        value={values.age}
+                        fullWidth
+                        error={touched.age && errors.age}
+                        helperText={touched.age && errors.age}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <StyledFormControl fullWidth error={touched.gender && errors.gender}>
@@ -600,31 +568,128 @@ const ContactLensForm = () => {
                       exit="exit"
                     >
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
-                          <StyledField
-                            name="rightEyePower"
-                            as={TextField}
-                            label="Right Eye Power"
-                            type="number"
-                            fullWidth
-                            error={touched.rightEyePower && errors.rightEyePower}
-                            helperText={touched.rightEyePower && errors.rightEyePower}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <StyledField
-                            name="leftEyePower"
-                            as={TextField}
-                            label="Left Eye Power"
-                            type="number"
-                            fullWidth
-                            error={touched.leftEyePower && errors.leftEyePower}
-                            helperText={touched.leftEyePower && errors.leftEyePower}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                          />
+                        <Grid item xs={12}>
+                          <div className="overflow-x-auto">
+                            <table className="w-full border-collapse" style={{ borderColor: isDarkMode ? '#333333' : '#e0e0e0' }}>
+                              <thead>
+                                <tr>
+                                  <th className="p-2 border text-left" style={{ borderColor: 'inherit' }}></th>
+                                  <th className="p-2 border text-center" style={{ borderColor: 'inherit' }}>S</th>
+                                  <th className="p-2 border text-center" style={{ borderColor: 'inherit' }}>C</th>
+                                  <th className="p-2 border text-center" style={{ borderColor: 'inherit' }}>A</th>
+                                  <th className="p-2 border text-center" style={{ borderColor: 'inherit' }}>ADD</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td className="p-2 border font-medium" style={{ borderColor: 'inherit' }}>RE</td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="rightEyeS"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      error={touched.rightEyeS && errors.rightEyeS}
+                                      helperText={touched.rightEyeS && errors.rightEyeS}
+                                      inputProps={{ step: 0.25 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="rightEyeC"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      inputProps={{ step: 0.25 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="rightEyeA"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      inputProps={{ step: 1 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="rightEyeAdd"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      inputProps={{ step: 0.25 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="p-2 border font-medium" style={{ borderColor: 'inherit' }}>LE</td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="leftEyeS"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      error={touched.leftEyeS && errors.leftEyeS}
+                                      helperText={touched.leftEyeS && errors.leftEyeS}
+                                      inputProps={{ step: 0.25 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="leftEyeC"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      inputProps={{ step: 0.25 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="leftEyeA"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      inputProps={{ step: 1 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                  <td className="p-2 border" style={{ borderColor: 'inherit' }}>
+                                    <StyledField
+                                      name="leftEyeAdd"
+                                      as={TextField}
+                                      type="number"
+                                      fullWidth
+                                      size="small"
+                                      inputProps={{ step: 0.25 }}
+                                      onChange={handleChange}  // Add this
+  onBlur={handleBlur}  
+                                    />
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
                         </Grid>
                       </Grid>
                     </FormSection>
@@ -646,18 +711,18 @@ const ContactLensForm = () => {
                 </Grid>
 
                 <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <AnimatedButton
-                      type="submit"
-                      whileHover={{ scale: 1.05, rotate: 1 }}
-                      whileTap={{ scale: 0.95 }}
-                      initial={{ scale: 1 }}
-                      animate={{ scale: [1, 1.02, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Submit Form'}
-                    </AnimatedButton>
-                  </Grid>
+                  <AnimatedButton
+                    type="submit"
+                    whileHover={{ scale: 1.05, rotate: 1 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ scale: 1 }}
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Form'}
+                  </AnimatedButton>
+                </Grid>
               </Grid>
             </Form>
           )}
