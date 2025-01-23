@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import styled from 'styled-components';
+import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import {
@@ -18,25 +18,80 @@ import {
   Box,
   Snackbar,
   Alert,
+  IconButton,
+  Switch,
 } from '@mui/material';
+import { LightMode, DarkMode, KeyboardArrowDown } from '@mui/icons-material';
 
+const GlobalStyle = createGlobalStyle`
+  .MuiSelect-icon {
+    color: ${props => props.theme.primary} !important;
+    right: 7px !important;
+    width: 24px !important;
+    height: 24px !important;
+    top: calc(50% - 12px) !important;
+  }
+`;
+
+const lightTheme = {
+  background: '#ffffff',
+  cardBg: '#f5f5f5',
+  text: '#000000',
+  inputBg: '#ffffff',
+  inputBorder: '#e0e0e0',
+  placeholder: '#666666',
+  primary: '#44d09f',
+  error: '#ff4d4d',
+};
+
+const darkTheme = {
+  background: '#111111',
+  cardBg: '#1a1a1a',
+  text: '#ffffff',
+  inputBg: '#1a1a1a',
+  inputBorder: '#333333',
+  placeholder: '#999999',
+  primary: '#44d09f',
+  error: '#ff4d4d',
+};
+
+const ThemeToggleWrapper = styled.div`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${props => props.theme.text};
+  cursor: pointer;
+  padding: 8px;
+  
+  .MuiSwitch-root {
+    margin: 0 8px;
+  }
+  
+  svg {
+    cursor: pointer;
+  }
+`;
 const StyledForm = styled(motion.div)`
-  background: #111111;
+  background: ${props => props.theme.cardBg};
   border-radius: 24px;
   padding: 3rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   margin: 2rem auto;
   max-width: 1000px;
   font-family: 'Inter', sans-serif;
-  color: #ffffff;
+  color: ${props => props.theme.text};
+  position: relative;
 `;
 
 const StyledField = styled(Field)`
   && {
     .MuiOutlinedInput-root {
-      background: #1a1a1a;
+      background: ${props => props.theme.inputBg};
       border-radius: 12px;
-      color: #ffffff;
+      color: ${props => props.theme.text};
       transition: all 0.3s ease;
       
       &:hover {
@@ -44,38 +99,124 @@ const StyledField = styled(Field)`
       }
       
       fieldset {
-        border-color: #333;
+        border-color: ${props => props.theme.inputBorder};
       }
       
       &.Mui-focused fieldset {
-        border-color: #44d09f;
+        border-color: ${props => props.theme.primary};
       }
       
       input {
-        color: #ffffff;
+        color: ${props => props.theme.text};
         
         &::placeholder {
-          color: #666;
+          color: ${props => props.theme.placeholder};
         }
       }
     }
     
     .MuiFormLabel-root {
-      color: #999;
+      color: ${props => props.theme.placeholder};
       
       &.Mui-focused {
-        color: #44d09f;
+        color: ${props => props.theme.primary};
       }
     }
     
     .MuiFormHelperText-root {
-      color: #ff4d4d;
+      color: ${props => props.theme.error};
+    }
+  }
+`;
+
+const StyledFormControl = styled(FormControl)`
+  && {
+    .MuiFormLabel-root {
+      color: ${props => props.theme.placeholder};
+    }
+    
+    .MuiRadio-root {
+      color: ${props => props.theme.placeholder};
+      
+      &.Mui-checked {
+        color: ${props => props.theme.primary};
+      }
+    }
+    
+    .MuiFormControlLabel-label {
+      color: ${props => props.theme.text};
+    }
+    
+    .MuiSelect-root {
+      background: ${props => props.theme.inputBg};
+      color: ${props => props.theme.text};
+      border-radius: 12px;
+      padding: 12px 16px;
+      border: 1px solid ${props => props.theme.inputBorder};
+      cursor: pointer;
+      
+      &:hover {
+        border-color: ${props => props.theme.primary};
+      }
+      
+      &.Mui-focused {
+        border-color: ${props => props.theme.primary};
+        background: ${props => props.theme.inputBg};
+      }
+
+      .MuiSelect-select {
+        padding: 12px 16px;
+        background: transparent !important;
+        color: ${props => props.theme.text} !important;
+
+        &.MuiInputBase-input {
+          padding-right: 32px;
+        }
+
+        &::placeholder {
+          color: ${props => props.theme.placeholder};
+        }
+      }
+    }
+    
+    .MuiOutlinedInput-notchedOutline {
+      border: none;
+    }
+  }
+`;
+const StyledTypography = styled(Typography)`
+  color: ${props => props.theme.text};
+  text-align: center;
+  margin-bottom: 32px;
+  margin-top: 24px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  user-select: none;
+`;
+
+const StyledMenuItem = styled(MenuItem)`
+  && {
+    color: ${props => props.theme.text};
+    background: ${props => props.theme.inputBg};
+    padding: 12px 16px;
+    
+    &:hover {
+      background: ${props => props.theme.primary}22;
+    }
+    
+    &.Mui-selected {
+      background: ${props => props.theme.primary}33;
+      
+      &:hover {
+        background: ${props => props.theme.primary}44;
+      }
     }
   }
 `;
 
 const AnimatedButton = styled(motion.button)`
-  background: #44d09f;
+  background: ${props => props.theme.primary};
   color: #000000;
   border: none;
   padding: 1rem 2rem;
@@ -83,7 +224,9 @@ const AnimatedButton = styled(motion.button)`
   cursor: pointer;
   font-size: 1rem;
   font-weight: 600;
-  width: 100%;
+  width: 200px;
+  margin: 0 auto;
+  display: block;
   transition: all 0.3s ease;
   font-family: 'Inter', sans-serif;
   
@@ -99,80 +242,10 @@ const AnimatedButton = styled(motion.button)`
   }
 `;
 
-const StyledFormControl = styled(FormControl)`
-  && {
-    .MuiFormLabel-root {
-      color: #999;
-    }
-    
-    .MuiRadio-root {
-      color: #666;
-      
-      &.Mui-checked {
-        color: #44d09f;
-      }
-    }
-    
-    .MuiFormControlLabel-label {
-      color: #fff;
-    }
-    
-    .MuiSelect-root {
-      background: #1a1a1a;
-      color: #fff;
-      border-radius: 12px;
-      
-      &:before, &:after {
-        border-color: #333;
-      }
-      
-      &.Mui-focused {
-        border-color: #44d09f;
-      }
-    }
-  }
-`;
-
-const StyledMenuItem = styled(MenuItem)`
-  && {
-    color: #fff;
-    background: #1a1a1a;
-    
-    &:hover {
-      background: #222;
-    }
-  }
-`;
 
 const FormSection = styled(motion.div)`
   margin: 1.5rem 0;
 `;
-
-const formVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut"
-    }
-  }
-};
-
-const sectionVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { 
-    opacity: 1, 
-    x: 0,
-    transition: { duration: 0.5 }
-  },
-  exit: { 
-    opacity: 0, 
-    x: 20,
-    transition: { duration: 0.3 }
-  }
-};
 
 const validationSchema = Yup.object({
   name: Yup.string().required('Name is required'),
@@ -203,9 +276,36 @@ const validationSchema = Yup.object({
   wantMultifocal: Yup.string().required('Please select multifocal preference')
 });
 
+const formVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut"
+    }
+  }
+};
+
+const sectionVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: { duration: 0.5 }
+  },
+  exit: { 
+    opacity: 0, 
+    x: 20,
+    transition: { duration: 0.3 }
+  }
+};
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMyqfklNMu4kA8NpeID2F9UczDcoM_0aAy8_-obqMAx210hSZCC0OvlLP7KxPm2Pls/exec';
 
 const ContactLensForm = () => {
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [submitStatus, setSubmitStatus] = useState({ open: false, severity: 'success', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -231,28 +331,18 @@ const ContactLensForm = () => {
       ease: 'power3.out'
     });
   }, []);
+
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     setIsSubmitting(true);
     try {
-      const formBody = `name=${encodeURIComponent(values.name)}&` +
-        `mobile=${encodeURIComponent(values.mobile)}&` +
-        `age=${encodeURIComponent(values.age)}&` +
-        `gender=${encodeURIComponent(values.gender)}&` +
-        `hasPreviousLenses=${encodeURIComponent(values.hasPreviousLenses)}&` +
-        `toric=${encodeURIComponent(values.toric)}&` +
-        `wearingSchedule=${encodeURIComponent(values.wearingSchedule)}&` +
-        `lensType=${encodeURIComponent(values.lensType)}&` +
-        `rightEyePower=${encodeURIComponent(values.rightEyePower)}&` +
-        `leftEyePower=${encodeURIComponent(values.leftEyePower)}&` +
-        `wantMultifocal=${encodeURIComponent(values.wantMultifocal)}`;
+      const formData = new FormData();
+      Object.entries(values).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
   
       const response = await fetch(SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formBody
+        body: formData
       });
   
       setSubmitStatus({
@@ -261,12 +351,6 @@ const ContactLensForm = () => {
         message: 'Form submitted successfully!'
       });
       resetForm();
-      gsap.to('.form-success', {
-        scale: 1,
-        opacity: 1,
-        duration: 0.5,
-        ease: 'power3.out'
-      });
     } catch (error) {
       console.error('Form submission error:', error);
       setSubmitStatus({
@@ -292,41 +376,37 @@ const ContactLensForm = () => {
       'Asphira Pro'
     ],
     daily: [
-      'Moist', 'Biotrue', 'MyDay',
-      'Aspire GoMax', 'Aspire 90', 'Iconroc'
+      'My day', 'Aspire go max', 'Aspire go',
+      'Biotrue', 'Moist', 'I connect'
     ]
   };
 
   return (
-    <>
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+      <GlobalStyle />
       <StyledForm
         initial="hidden"
         animate="visible"
         variants={formVariants}
       >
-        <Typography 
-          variant="h4" 
-          className="form-title"
-          sx={{ 
-            textAlign: 'center',
-            mb: 4,
-            color: '#ffffff',
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 700,
-            fontSize: '2rem'
-          }}
-        >
-          Vision Care Contact Lens Form
-        </Typography>
+       <ThemeToggleWrapper onClick={() => setIsDarkMode(!isDarkMode)}>
+  {/* <LightMode />
+  <Switch
+    checked={isDarkMode}
+    color="primary"
+  /> */}
+  <DarkMode />
+</ThemeToggleWrapper>
 
+<StyledTypography variant="h4" style={{marginBottom: '20px', fontWeight: 'bold'}} className="form-title">
+  Vision Care Contact Lens Form
+</StyledTypography>
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
-          validateOnChange={true}
-          validateOnBlur={true}
         >
-          {({ values, errors, touched, handleChange, handleBlur, isSubmitting }) => (
+          {({ values, errors, touched, handleChange, handleBlur }) => (
             <Form noValidate>
               <Grid container spacing={3}>
                 <FormSection
@@ -436,7 +516,12 @@ const ContactLensForm = () => {
                               as={Select}
                               onChange={handleChange}
                               onBlur={handleBlur}
+                              displayEmpty
+                              IconComponent={KeyboardArrowDown}
                             >
+                              <StyledMenuItem disabled value="">
+                                Select Wearing Schedule
+                              </StyledMenuItem>
                               <StyledMenuItem value="yearly">Yearly</StyledMenuItem>
                               <StyledMenuItem value="monthly">Monthly</StyledMenuItem>
                               <StyledMenuItem value="daily">Daily</StyledMenuItem>
@@ -453,7 +538,12 @@ const ContactLensForm = () => {
                                 as={Select}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
+                                displayEmpty
+                                IconComponent={KeyboardArrowDown}
                               >
+                                <StyledMenuItem disabled value="">
+                                  Select Lens Type
+                                </StyledMenuItem>
                                 {lensTypes[values.wearingSchedule]?.map((lens) => (
                                   <StyledMenuItem key={lens} value={lens}>
                                     {lens}
@@ -476,7 +566,7 @@ const ContactLensForm = () => {
                       exit="exit"
                     >
                       <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
+                        <Grid item xs={12} md={6}>
                           <StyledField
                             name="rightEyePower"
                             as={TextField}
@@ -521,16 +611,19 @@ const ContactLensForm = () => {
                   </StyledFormControl>
                 </Grid>
 
-                <Grid item xs={12}>
-                  <AnimatedButton
-                    type="submit"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Form'}
-                  </AnimatedButton>
-                </Grid>
+                <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <AnimatedButton
+                      type="submit"
+                      whileHover={{ scale: 1.05, rotate: 1 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ scale: 1 }}
+                      animate={{ scale: [1, 1.02, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Submitting...' : 'Submit Form'}
+                    </AnimatedButton>
+                  </Grid>
               </Grid>
             </Form>
           )}
@@ -555,7 +648,7 @@ const ContactLensForm = () => {
           {submitStatus.message}
         </Alert>
       </Snackbar>
-    </>
+    </ThemeProvider>
   );
 };
 
