@@ -185,16 +185,17 @@ const StyledFormControl = styled(FormControl)`
   }
 `;
 const StyledTypography = styled(Typography)`
-  color: ${props => props.theme.text};
-  text-align: center;
-  margin-bottom: 32px;
-  margin-top: 24px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 2rem;
-  user-select: none;
+  && {
+    color: ${props => props.theme.text};
+    text-align: center;
+    margin-bottom: 32px;
+    margin-top: 24px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    user-select: none;
+  }
 `;
-
 const StyledMenuItem = styled(MenuItem)`
   && {
     color: ${props => props.theme.text};
@@ -302,7 +303,7 @@ const sectionVariants = {
   }
 };
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMyqfklNMu4kA8NpeID2F9UczDcoM_0aAy8_-obqMAx210hSZCC0OvlLP7KxPm2Pls/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoy89rPsfO0LdC0hkd9icw2UKi2dmsLwCv6VBMqgNJDpH4NtPM3pq4T6oAxXr48uYQpA/exec';
 
 const ContactLensForm = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -335,14 +336,27 @@ const ContactLensForm = () => {
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      Object.entries(values).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
+      const formData = {
+        name: values.name,
+        mobile: values.mobile, 
+        age: values.age,
+        gender: values.gender,
+        hasPreviousLenses: values.hasPreviousLenses,
+        toric: values.toric,
+        wearingSchedule: values.wearingSchedule,
+        lensType: values.lensType,
+        rightEyePower: values.rightEyePower,
+        leftEyePower: values.leftEyePower,
+        wantMultifocal: values.wantMultifocal
+      };
   
-      const response = await fetch(SCRIPT_URL, {
+      await fetch(SCRIPT_URL, {
         method: 'POST',
-        body: formData
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
       });
   
       setSubmitStatus({
@@ -350,12 +364,29 @@ const ContactLensForm = () => {
         severity: 'success',
         message: 'Form submitted successfully!'
       });
-      resetForm();
+      resetForm({
+        values: {
+          name: '',
+          mobile: '',
+          age: '',
+          gender: '',
+          hasPreviousLenses: '',
+          toric: '',
+          wearingSchedule: '',
+          lensType: '',
+          rightEyePower: '',
+          leftEyePower: '',
+          wantMultifocal: ''
+        }
+      });
+      resetForm({
+        values: initialValues
+      });
     } catch (error) {
       console.error('Form submission error:', error);
       setSubmitStatus({
         open: true,
-        severity: 'error',
+        severity: 'error', 
         message: 'Failed to submit form. Please try again.'
       });
     } finally {
@@ -363,7 +394,6 @@ const ContactLensForm = () => {
       setSubmitting(false);
     }
   };
-
   const handleCloseSnackbar = () => {
     setSubmitStatus({ ...submitStatus, open: false });
   };
@@ -390,17 +420,15 @@ const ContactLensForm = () => {
         variants={formVariants}
       >
        <ThemeToggleWrapper onClick={() => setIsDarkMode(!isDarkMode)}>
-  {/* <LightMode />
-  <Switch
-    checked={isDarkMode}
-    color="primary"
-  /> */}
+
   <DarkMode />
 </ThemeToggleWrapper>
+<div style={{textAlign: 'center',marginBottom: '20px'}}>
 
-<StyledTypography variant="h4" style={{marginBottom: '20px', fontWeight: 'bold'}} className="form-title">
+<h1 variant="h4" style={{marginBottom: '20px', color: '#44d09f', fontWeight: 'bold'}} className="form-title">
   Vision Care Contact Lens Form
-</StyledTypography>
+</h1>
+</div>
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -423,6 +451,7 @@ const ContactLensForm = () => {
                         as={TextField}
                         label="Name"
                         fullWidth
+                        value={values.name}
                         error={touched.name && errors.name}
                         helperText={touched.name && errors.name}
                         onChange={handleChange}
@@ -430,29 +459,34 @@ const ContactLensForm = () => {
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <StyledField
-                        name="mobile"
-                        as={TextField}
-                        label="Mobile"
-                        fullWidth
-                        error={touched.mobile && errors.mobile}
-                        helperText={touched.mobile && errors.mobile}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
+                    <StyledField 
+  name="mobile"
+  type="number"
+  as={TextField}
+  label="Mobile"
+  value={values.mobile}
+  fullWidth
+  error={touched.mobile && errors.mobile}
+  helperText={touched.mobile && errors.mobile}
+  onChange={handleChange}  
+  onBlur={handleBlur}
+  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+/>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <StyledField
-                        name="age"
-                        as={TextField}
-                        label="Age"
-                        type="number"
-                        fullWidth
-                        error={touched.age && errors.age}
-                        helperText={touched.age && errors.age}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                      />
+                    <StyledField
+  name="age"
+  as={TextField}
+  label="Age"
+  type="number"
+  fullWidth
+  value={values.age}
+  error={touched.age && errors.age}
+  helperText={touched.age && errors.age}
+  onChange={handleChange}
+  onBlur={handleBlur}
+  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+/>
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <StyledFormControl fullWidth error={touched.gender && errors.gender}>
